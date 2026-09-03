@@ -8,53 +8,65 @@ Web
 
 ## Stack
 
-React with TypeScript, Vite, and Tailwind CSS.
+React with TypeScript, Vite, and Tailwind CSS. GSAP with ScrollTrigger for scroll choreography, Lenis for desktop smooth scrolling, Phosphor for icons.
 
 ## Shipped experience
 
-Mainframe® is a scroll-led landing page for an automation studio. It opens with A.R.I.A. and a direct proposition, then turns the visitor's scattered-work problem into a visual story: leaking work, a connected Mainframe system, the three ways Mainframe builds, the boundary between human judgment and repeatable work, a request moving through its route, a practical operating method, and a direct invitation to start.
+Mainframe® is a scroll-led landing page for an automation studio. It opens with a full-bleed typographic proposition, then demonstrates the offer through a sequence of live panels rather than illustrations: a request routed through a system, the channels work arrives on, repeated work closing itself out, the internal tool the work sits in, scattered records reconciled into one, the line between automated and human work, how a build sequences, and a direct ask.
+
+## One job, followed through the page
+
+Every live panel shows the same piece of work from a different angle, so the page reads as one connected system rather than a set of unrelated demos. The identity lives in `src/thread.ts`.
+
+Order **#5512** for **Halcyon Fixings** appears as:
+
+- the first item routed through the workflow diagram
+- the WhatsApp conversation that creates it
+- a closed row in the run log
+- a scheduled row in the internal tool
+- the order that triggers a customer-record reconciliation
 
 ## Visitor-facing message
 
-- The main message says: “Work that repeats should run itself.”
-- The supporting statement says: “Mainframe turns messy operations into automation, custom software, and clean data systems.”
-- The hero annotation says: “Meet A.R.I.A., Mainframe's automation intelligence agent.”
-- “Map a workflow” is the primary response choice, with “Build a tool,” “Clean the data,” and “Copy email” as secondary actions.
-- The page names a familiar problem: “Most work doesn’t stop. It leaks.”
-- It explains the offer with “A system, not a stack.” and the three services: automation, custom software, and clean data.
-- It sets a responsible automation boundary with “Not every task should run itself.” and clearly separates decisions, exceptions, and approvals from routing, reminders, and record updates.
-- It makes the operational journey concrete with “A request arrives.”, “Context stays with it.”, “The route becomes clear.”, and “Useful work continues.”
-- It closes with “What should run without you?” and a project-start email action that accepts a forwarded email, screenshot, spreadsheet, or a short process description.
+- The main message says: “WE BUILD SYSTEMS THAT MOVE BUSINESS.”
+- The supporting statement says: “Mainframe builds the operational layer behind ambitious businesses.”
+- The workflow chapter says: “One request, from arrival to done.”
+- The systems chapter says: “Everything you use works better when it works together.”
+- The automation chapter says: “Automation that keeps the business moving.”
+- The software chapter says: “Software that fits how your business works, not the other way around.”
+- The data chapter says: “Data, cleaned, connected, and ready to work.”
+- The statement band says: “Less dragging. More moving.”
+- The boundary chapter says: “Not every task should run itself,” and frames the split as the client's choice: everything on the left runs alone, everything on the right still gets prepared and then handed over. The closing line is “You set the line, and you can move it.”
+- The method chapter says: “We go from messy to working. Fast, and properly.”
+- It closes with “Tell us what should run itself.”
+
+## Live panels
+
+- **Workflow** — a request moves along a spine of five nodes, with a dashed branch to “Sent to a person.” Some items take the branch instead of finishing.
+- **Channels** — the same order on WhatsApp, plus an email thread, a Slack channel, and a web form. Each channel has its own accent and layout; WhatsApp and the form read as conversations, email and Slack as feeds.
+- **Run log** — new runs push in from the top every 2.4s on uneven timestamps. Roughly one in five is “held” and waiting on a person.
+- **Ops desk** — the only light-ground panel, an internal jobs table whose rows advance stage over time.
+- **Record merge** — three systems disagree about one customer; fields resolve one at a time, each showing which source won and why.
+- **Build timeline** — four overlapping phases across eight weeks, with three deliverable markers.
 
 ## Contact model
 
-All current contact paths use the supplied address, `hello@mainframe.co`.
+The primary route is a contact form at the end of the page collecting name, email, optional phone, and what the visitor wants automated. Validation is client-side with linked error messages and focus management.
 
-- Desktop and mobile navigation link to the relevant on-page chapters: Automation, Software, Data, and Start here. “Get in touch” opens a direct email link.
-- The primary response and two secondary service links are email links with contextual subjects.
-- “Copy email” copies the address to the clipboard and announces confirmation to assistive technology. A temporary textarea fallback is used if the Clipboard API is unavailable.
-- The final intake keeps the contact model local and direct. Visitors select what they have, can add a one-sentence description, and open a populated email draft. Selecting a source also suggests the matching service starting point without preventing an override.
+**There is no backend.** Submitting composes an email to `hello@mainframe.co` with the details filled in, which the visitor then sends from their own mail client. Wiring a real endpoint is a pending decision.
 
-## Supplied media
+Desktop and mobile navigation link to on-page chapters: Workflow, Systems, Automation, Data, and Start a build. “Get in touch” and the footer address both open a direct email link.
 
-The hero uses a local, scrub-optimised derivative of the provided CloudFront video as its only background media:
+## Media
 
-`https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4`
-
-`public/mainframe-motion.mp4` is a 1600×904, 24fps H.264 version with an intra frame about every quarter-second and no audio. It is muted, inline, and never autoplayed. On a capable desktop connection it is deferred until the browser is idle and revealed once its first frame can be drawn. Horizontal mouse movement then advances or reverses the film itself, so the computer-headed figure changes with the cursor. The seek queue is coalesced to one frame and serialized around media completion. It is not requested on small screens, reduced-motion settings, Data Saver, or 2G-class connections.
-
-`public/mainframe-relay.png` is an original generated editorial still life of a physical relay sorting a paper route. It supports the page's systems chapter and contains no claims, product UI, or customer data.
-
-`public/mainframe-leak.png` is an original generated editorial still life of scattered paper routes and relay parts. It supports the friction chapter and contains no text, product UI, or customer data.
-
-`public/mainframe-archive.png` is an original generated editorial portrait of a precision archive machine. It supports the method chapter and contains no text, product UI, or customer data.
-
-`public/mainframe-judgment.png` is an original generated editorial still life of a physical route splitting toward a manual decision lever and an automated relay. It supports the responsible-automation chapter and contains no text, product UI, or customer data.
+The page ships **no image or video assets.** Every chapter is rendered from markup, CSS and SVG. The `public/` directory is empty by design.
 
 ## Product constraints
 
-- Mainframe’s supplied name, film asset, and email address are represented exactly as implemented.
-- The experience remains usable across mobile and desktop navigation states, with a responsive menu below the medium breakpoint that traps keyboard focus while open and returns focus to its toggle when closed.
-- A reduced-motion preference and small viewport both avoid requesting the decorative video, render the message immediately, and reveal the action choices without their entrance delay.
-- The opening makes the studio's focus explicit: workflow automation, custom software, and clean data systems.
-- Desktop scroll motion is progressive enhancement only: the system assembly and request-routing chapter pin only above the desktop breakpoint. Tablets retain lightweight reading-order reveals. On mobile and under reduced-motion settings, the complete story remains a normal readable document with all routes and content visible.
+- Mainframe's supplied name and email address are represented exactly as implemented.
+- No invented client logos, outcome metrics, case studies, or team biographies. Demo data is illustrative and uses `.example` domains.
+- Channel names and brand accent colours are used descriptively to indicate which surface a build lands on. The panels are Mainframe's own surfaces, not reproductions of those products' interfaces.
+- The experience remains usable across mobile and desktop, with a responsive menu below the medium breakpoint that traps keyboard focus and returns focus to its toggle.
+- A reduced-motion preference removes non-essential animation and freezes every live panel in a completed, readable state.
+- Live panels stop their intervals when scrolled off-screen.
+- Desktop scroll choreography is progressive enhancement: the hero pins only above the desktop breakpoint, and on mobile the full story remains a normal readable document.
