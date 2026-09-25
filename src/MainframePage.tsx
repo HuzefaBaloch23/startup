@@ -10,16 +10,20 @@ import BuildTimeline from "./BuildTimeline";
 import ContactForm from "./ContactForm";
 import RecordMerge from "./RecordMerge";
 import WorkflowCanvas from "./WorkflowCanvas";
+import CodavoltIcon from "./CodavoltIcon";
+import LaserThreshold from "./LaserThreshold";
+import FourPillars from "./FourPillars";
+import ProjectsShowcase from "./ProjectsShowcase";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const EMAIL = "hello@mainframe.co";
+const EMAIL = "hello@codavolt.com";
 
 const navigation = [
-  { label: "Workflow", href: "#workflow" },
-  { label: "Systems", href: "#systems" },
-  { label: "Automation", href: "#automation" },
-  { label: "Data", href: "#data" },
+  { label: "Services", href: "#services" },
+  { label: "Case Studies", href: "#work" },
+  { label: "Engineering Lab", href: "#lab" },
+  { label: "Process", href: "#process" },
   { label: "Start a build", href: "#start" },
 ];
 
@@ -31,24 +35,6 @@ const services = [
   { title: "Data Systems", detail: "Information ready to decide with.", position: "data" },
   { title: "AI Tools", detail: "Useful intelligence inside the work.", position: "ai" },
   { title: "Integrations", detail: "Every important tool talking.", position: "integrations" },
-];
-
-const runsItself = [
-  "Routing and assignment",
-  "Reminders and chasing",
-  "Voice, chat, and email replies",
-  "Record updates and data checks",
-  "Scheduled syncs and reports",
-  "Notifications, with the context attached",
-];
-
-const comesToYou = [
-  "Decisions that need judgment",
-  "Exceptions the rules did not predict",
-  "Approvals over your threshold",
-  "Anything with legal or safety weight",
-  "Pricing you would have to defend",
-  "The last word on a relationship",
 ];
 
 type NavigatorWithConnection = Navigator & {
@@ -181,6 +167,12 @@ function MainframePage() {
   }, [menuOpen]);
 
   useEffect(() => {
+    if (desktop && menuOpen) {
+      setMenuOpen(false);
+    }
+  }, [desktop, menuOpen]);
+
+  useEffect(() => {
     if (!desktop || !finePointer || reducedMotion) return;
 
     const cursor = cursorRef.current;
@@ -286,16 +278,18 @@ function MainframePage() {
         },
       );
 
-      gsap.fromTo(
-        ".mf-boundary-line",
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: "power2.out",
-          duration: 1.1,
-          scrollTrigger: { trigger: ".mf-boundary-split", start: "top 80%", once: true },
-        },
-      );
+      if (root.querySelector(".mf-boundary-line")) {
+        gsap.fromTo(
+          ".mf-boundary-line",
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: "power2.out",
+            duration: 1.1,
+            scrollTrigger: { trigger: ".mf-boundary-split", start: "top 80%", once: true },
+          },
+        );
+      }
 
       gsap.utils.toArray<HTMLElement>(".mf-idx-row", root).forEach((row, index) => {
         gsap.fromTo(
@@ -383,7 +377,7 @@ function MainframePage() {
   return (
     <div ref={rootRef} className={"mf-site " + (menuOpen ? "mf-menu-open" : "")}>
       <a className="mf-skip-link" href="#main-content">Skip to content</a>
-      <div className={"mf-loader " + (loaded ? "is-complete" : "")} aria-live="polite" aria-label="Mainframe is loading">
+      <div className={"mf-loader " + (loaded ? "is-complete" : "")} aria-live="polite" aria-label="Codavolt is loading">
         <span className="mf-loader-word mf-loader-word--one">INITIALIZING</span>
         <span className="mf-loader-word mf-loader-word--two">WE BUILD</span>
         <span className="mf-loader-word mf-loader-word--three">WHAT&apos;S NEXT.</span>
@@ -391,8 +385,9 @@ function MainframePage() {
       </div>
 
       <header className={"mf-header " + (condensed ? "is-condensed" : "")}>
-        <a className="mf-wordmark" href="#top" data-cursor aria-label="Mainframe home">
-          MAINFRAME<span>®</span>
+        <a className="mf-wordmark" href="#top" data-cursor aria-label="Codavolt home">
+          <CodavoltIcon size={24} />
+          CODAVOLT<span>®</span>
         </a>
         <nav className="mf-desktop-nav" aria-label="Primary navigation">
           {navigation.map((item) => (
@@ -416,16 +411,22 @@ function MainframePage() {
         </button>
       </header>
 
-      <div ref={menuRef} id="mobile-navigation" className="mf-mobile-menu" aria-hidden={!menuOpen}>
+      <div
+        ref={menuRef}
+        id="mobile-navigation"
+        className="mf-mobile-menu"
+        aria-hidden={!menuOpen}
+        inert={!menuOpen || undefined}
+      >
         <div>
-          <p>MAINFRAME / MENU</p>
+          <p>CODAVOLT / MENU</p>
           {navigation.map((item) => (
             <a key={item.label} href={item.href} onClick={closeMenu}>
               {item.label}<ArrowUpRight size={22} aria-hidden="true" />
             </a>
           ))}
         </div>
-        <a href={"mailto:" + EMAIL} onClick={closeMenu}>hello@mainframe.co</a>
+        <a href={"mailto:" + EMAIL} onClick={closeMenu}>{EMAIL}</a>
       </div>
 
       <main id="main-content" tabIndex={-1}>
@@ -434,7 +435,7 @@ function MainframePage() {
             <div className="mf-aurora" aria-hidden="true"><i /><i /><i /></div>
             <div className="mf-hero-noise" aria-hidden="true" />
             <div className="mf-hero-copy">
-              <p className="mf-hero-intro">Mainframe builds the operational layer behind ambitious businesses.</p>
+              <p className="mf-hero-intro">Codavolt builds the operational layer behind ambitious businesses.</p>
               <h1 id="hero-title">
                 <span>WE BUILD</span>
                 <span>SYSTEMS THAT</span>
@@ -466,8 +467,18 @@ function MainframePage() {
           </div>
         </section>
 
+        {/* 1. THE 4 PILLARS (Core Services) */}
+        <FourPillars />
+
+        {/* 2. FEATURED WORK (Visual Project Showcase & Case Studies) */}
+        <ProjectsShowcase />
+
+        {/* 3. THE ENGINEERING LAB (Interactive 3D Conduit & Laser Autonomy) */}
+        <section id="lab" className="mf-lab-anchor" aria-hidden="true" />
+
         <section id="workflow" className="mf-flow-section mf-section-shell" aria-labelledby="workflow-title">
           <div className="mf-scene-copy">
+            <span className="mf-pill-eyebrow"><span className="mf-pill-dot" /> THE ENGINEERING LAB</span>
             <h2 id="workflow-title" className="js-reveal">One request, from arrival to done.</h2>
             <p className="js-reveal">This is a system running. Work arrives, keeps its context, follows the rules you set, and stops for a person only when judgment is genuinely needed.</p>
             <a className="mf-inline-button js-reveal" href="#start" data-cursor>Map your version <ArrowUpRight size={18} aria-hidden="true" /></a>
@@ -496,7 +507,7 @@ function MainframePage() {
             </div>
           </div>
 
-          <ol className="mf-index" aria-label="Mainframe services">
+          <ol className="mf-index" aria-label="Codavolt services">
             {services.map((service, index) => (
               <li key={service.title} className="mf-idx-row">
                 <a className="mf-idx-link" href="#start" data-cursor>
@@ -547,7 +558,7 @@ function MainframePage() {
           </div>
         </section>
 
-        <section className="mf-words-section" aria-label="Mainframe operational principles">
+        <section className="mf-words-section" aria-label="Codavolt operational principles">
           <div className="mf-words-inner">
             <p className="mf-words-eyebrow js-reveal"><i aria-hidden="true" />The point</p>
             <p className="mf-words">
@@ -561,24 +572,8 @@ function MainframePage() {
         <section id="boundary" className="mf-boundary mf-section-shell" aria-labelledby="boundary-title">
           <p className="mf-section-note js-reveal">You draw the line.</p>
           <h2 id="boundary-title" className="js-reveal">Not every task should run itself.</h2>
-          <div className="mf-boundary-split">
-            <div className="mf-boundary-line" aria-hidden="true" />
-            <div className="mf-boundary-col mf-boundary-col--auto">
-              <h3><i aria-hidden="true" />Runs without you</h3>
-              <ul>
-                {runsItself.map((item, index) => (
-                  <li key={item} className="js-boundary"><span>{String(index + 1).padStart(2, "0")}</span>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="mf-boundary-col mf-boundary-col--human">
-              <h3><i aria-hidden="true" />Comes to you first</h3>
-              <ul>
-                {comesToYou.map((item, index) => (
-                  <li key={item} className="js-boundary"><span>{String(index + 1).padStart(2, "0")}</span>{item}</li>
-                ))}
-              </ul>
-            </div>
+          <div className="js-reveal">
+            <LaserThreshold reducedMotion={reducedMotion} />
           </div>
           <p className="mf-boundary-note js-reveal">
             <b>You set the line, and you can move it.</b> Everything on the left runs on its own. Everything on the right still gets done — gathered, checked, and prepared — then handed to you with the context already attached.
@@ -595,7 +590,7 @@ function MainframePage() {
           </div>
         </section>
 
-        <section className="mf-statement-section" aria-label="Mainframe statement">
+        <section className="mf-statement-section" aria-label="Codavolt statement">
           <p>When the system gets clear,</p>
           <h2><span>EVERYTHING</span><span>MOVES.</span></h2>
           <div className="mf-statement-lights" aria-hidden="true"><i /><i /><i /><i /></div>
@@ -612,9 +607,12 @@ function MainframePage() {
       </main>
 
       <footer className="mf-footer">
-        <a className="mf-wordmark" href="#top" data-cursor>MAINFRAME<span>®</span></a>
+        <a className="mf-wordmark" href="#top" data-cursor aria-label="Codavolt home">
+          <CodavoltIcon size={24} />
+          CODAVOLT<span>®</span>
+        </a>
         <p>Automation, custom software, clean data, AI tools, and integrations for businesses ready to move.</p>
-        <span>© {new Date().getFullYear()} Mainframe</span>
+        <span>© {new Date().getFullYear()} Codavolt</span>
       </footer>
 
       {desktop && finePointer && !reducedMotion && <div ref={cursorRef} className="mf-cursor" data-visible="false" aria-hidden="true" />}

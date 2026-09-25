@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
 import { JOB, JOB_REF } from "./thread";
 import { useOnScreen } from "./useOnScreen";
 
@@ -83,16 +83,16 @@ const CHANNELS: Channel[] = [
     room: "sales-inbound",
     messages: [
       {
-        author: "Mainframe",
-        initials: "M",
+        author: "Codavolt",
+        initials: "C",
         color: "#3F0E40",
         time: "11:04",
         text: "New lead — Okonkwo Ltd. 40 seats, enterprise plan.",
         app: true,
       },
       {
-        author: "Mainframe",
-        initials: "M",
+        author: "Codavolt",
+        initials: "C",
         color: "#3F0E40",
         time: "11:04",
         text: "Matched an existing account. Assigned to Sana, context added to the CRM.",
@@ -110,8 +110,8 @@ const CHANNELS: Channel[] = [
   {
     id: "form",
     label: "Web form",
-    accent: "#E9B9C8",
-    fill: "#E9B9C8",
+    accent: "#38BDF8",
+    fill: "#38BDF8",
     tabText: "#0A0A0D",
     outcome: "Confirmed and on the calendar",
     formName: "Book a site visit",
@@ -191,6 +191,17 @@ function ChannelDemo({ reducedMotion = false }: ChannelDemoProps) {
     });
   };
 
+  const onKeyDownTabs = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      const dir = event.key === "ArrowRight" ? 1 : -1;
+      const nextIndex = (state.channel + dir + CHANNELS.length) % CHANNELS.length;
+      pick(nextIndex);
+      const nextButton = document.getElementById("channel-tab-" + CHANNELS[nextIndex].id);
+      nextButton?.focus();
+    }
+  };
+
   return (
     <div
       className="mf-channel-demo"
@@ -198,7 +209,12 @@ function ChannelDemo({ reducedMotion = false }: ChannelDemoProps) {
       data-channel={channel.id}
       style={{ "--ch-accent": channel.accent } as CSSProperties}
     >
-      <div className="mf-channel-tabs" role="tablist" aria-label="Channels we build on">
+      <div
+        className="mf-channel-tabs"
+        role="tablist"
+        aria-label="Channels we build on"
+        onKeyDown={onKeyDownTabs}
+      >
         {CHANNELS.map((entry, index) => {
           const isActive = index === state.channel;
           const style = {

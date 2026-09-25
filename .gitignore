@@ -28,3 +28,10 @@ Thumbs.db
 temp-*.mp4
 vlc-help.txt
 *.log
+
+# Agent & AI tool caches
+.agents/
+.claude/
+agent/
+frontend-expert/
+skills-lock.json
