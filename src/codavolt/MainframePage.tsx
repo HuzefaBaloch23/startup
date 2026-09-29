@@ -1,0 +1,649 @@
+// @ts-nocheck -- ported as-is from the original Codavolt build
+import { type PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowRight, ArrowUpRight, List, X } from "@phosphor-icons/react";
+import Lenis from "lenis";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import AutomationRuns from "./AutomationRuns";
+import ChannelDemo from "./ChannelDemo";
+import OpsDesk from "./OpsDesk";
+import BuildTimeline from "./BuildTimeline";
+import ContactForm from "./ContactForm";
+import RecordMerge from "./RecordMerge";
+import WorkflowCanvas from "./WorkflowCanvas";
+import CodavoltIcon from "./CodavoltIcon";
+import LaserThreshold from "./LaserThreshold";
+import FourPillars from "./FourPillars";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const EMAIL = "team@codavolt.tech";
+
+const navigation = [
+  { label: "Services", href: "#services" },
+  { label: "Engineering Lab", href: "#lab" },
+  { label: "Process", href: "#process" },
+  { label: "Start a build", href: "#start" },
+];
+
+const services = [
+  { title: "Automation", detail: "Repeatable work, in motion.", position: "automation" },
+  { title: "Custom Software", detail: "Tools shaped around your team.", position: "software" },
+  { title: "CRM Systems", detail: "Relationships with context intact.", position: "crm" },
+  { title: "Websites", detail: "A clear front door for growth.", position: "websites" },
+  { title: "Data Systems", detail: "Information ready to decide with.", position: "data" },
+  { title: "AI Tools", detail: "Useful intelligence inside the work.", position: "ai" },
+  { title: "Integrations", detail: "Every important tool talking.", position: "integrations" },
+];
+
+type NavigatorWithConnection = Navigator & {
+  connection?: { saveData?: boolean; effectiveType?: string };
+};
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+
+  return matches;
+}
+
+function useReducedMotion() {
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
+}
+
+function useDataSaver() {
+  const [saveData] = useState(() => {
+    if (typeof navigator === "undefined") return false;
+    const connection = (navigator as NavigatorWithConnection).connection;
+    return Boolean(connection?.saveData || connection?.effectiveType === "2g");
+  });
+  return saveData;
+}
+
+function MainframePage() {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const heroScrollRef = useRef<HTMLElement | null>(null);
+  const heroPinRef = useRef<HTMLDivElement | null>(null);
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [condensed, setCondensed] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const desktop = useMediaQuery("(min-width: 960px)");
+  const finePointer = useMediaQuery("(hover: hover) and (pointer: fine)");
+  const saveData = useDataSaver();
+
+  useEffect(() => {
+    if (reducedMotion) {
+      setLoaded(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setLoaded(true), 1150);
+    return () => window.clearTimeout(timer);
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    if (!desktop || reducedMotion || saveData) return;
+
+    const lenis = new Lenis({
+      autoRaf: false,
+      lerp: 0.085,
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+    });
+    const tick = (time: number) => lenis.raf(time * 1000);
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
+    const refreshId = window.requestAnimationFrame(() => ScrollTrigger.refresh());
+
+    return () => {
+      window.cancelAnimationFrame(refreshId);
+      gsap.ticker.remove(tick);
+      lenis.destroy();
+    };
+  }, [desktop, reducedMotion, saveData]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const next = y > 48;
+      setCondensed((current) => (current === next ? current : next));
+      const hide = y > 320 && y > lastY + 4;
+      const show = y < lastY - 4 || y <= 320;
+      if (hide) setNavHidden(true);
+      else if (show) setNavHidden(false);
+      lastY = y;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const menu = menuRef.current;
+    const returnFocus = menuButtonRef.current;
+    const focusables = () =>
+      Array.from(
+        menu?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.setTimeout(() => focusables()[0]?.focus(), 0);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKeyDown);
+      returnFocus?.focus();
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (desktop && menuOpen) {
+      setMenuOpen(false);
+    }
+  }, [desktop, menuOpen]);
+
+  useEffect(() => {
+    if (!desktop || !finePointer || reducedMotion) return;
+
+    const cursor = cursorRef.current;
+    const auroras = Array.from(document.querySelectorAll<HTMLElement>(".mf-aurora"));
+    const onPointerMove = (event: PointerEvent) => {
+      const nx = (event.clientX / window.innerWidth) * 2 - 1;
+      const ny = (event.clientY / window.innerHeight) * 2 - 1;
+      auroras.forEach((aurora) => {
+        aurora.style.setProperty("--aurora-x", String(nx));
+        aurora.style.setProperty("--aurora-y", String(ny));
+      });
+      if (cursor) {
+        cursor.style.transform = "translate3d(" + (event.clientX - 11) + "px, " + (event.clientY - 11) + "px, 0) scale(var(--cursor-scale, 1))";
+        cursor.dataset.visible = "true";
+      }
+    };
+    const onPointerLeave = () => {
+      if (cursor) cursor.dataset.visible = "false";
+    };
+    const interactive = Array.from(document.querySelectorAll<HTMLElement>("[data-cursor]"));
+    const activate = () => document.body.classList.add("mf-cursor-is-active");
+    const deactivate = () => document.body.classList.remove("mf-cursor-is-active");
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    document.documentElement.addEventListener("mouseleave", onPointerLeave);
+    interactive.forEach((element) => {
+      element.addEventListener("mouseenter", activate);
+      element.addEventListener("mouseleave", deactivate);
+    });
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      document.documentElement.removeEventListener("mouseleave", onPointerLeave);
+      interactive.forEach((element) => {
+        element.removeEventListener("mouseenter", activate);
+        element.removeEventListener("mouseleave", deactivate);
+      });
+      document.body.classList.remove("mf-cursor-is-active");
+    };
+  }, [desktop, finePointer, reducedMotion]);
+
+  useLayoutEffect(() => {
+    if (reducedMotion || saveData) return;
+
+    const ctx = gsap.context(() => {
+      const media = gsap.matchMedia();
+      const root = rootRef.current;
+      if (!root) return;
+
+      gsap.utils.toArray<HTMLElement>(".js-reveal", root).forEach((element) => {
+        gsap.fromTo(
+          element,
+          { autoAlpha: 0, y: 18 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            ease: "power2.out",
+            duration: 0.62,
+            scrollTrigger: { trigger: element, start: "top 90%", once: true },
+          },
+        );
+      });
+
+      gsap.utils.toArray<HTMLElement>(".mf-boundary-col", root).forEach((column) => {
+        const fromLeft = column.classList.contains("mf-boundary-col--auto");
+        gsap.fromTo(
+          column.querySelectorAll(".js-boundary"),
+          { autoAlpha: 0, x: fromLeft ? -26 : 26 },
+          {
+            autoAlpha: 1,
+            x: 0,
+            ease: "power3.out",
+            duration: 0.7,
+            stagger: 0.07,
+            scrollTrigger: { trigger: column, start: "top 82%", once: true },
+          },
+        );
+      });
+
+      if (root.querySelector(".mf-timeline")) {
+        gsap.fromTo(
+          ".mf-tl-bar",
+          { scaleX: 0 },
+          {
+            scaleX: 1,
+            ease: "power2.out",
+            duration: 0.7,
+            stagger: 0.1,
+            scrollTrigger: { trigger: ".mf-timeline", start: "top 88%", once: true },
+          },
+        );
+
+        gsap.fromTo(
+          ".mf-tl-mark",
+          { autoAlpha: 0, y: 8 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            ease: "power2.out",
+            duration: 0.45,
+            stagger: 0.1,
+            delay: 0.35,
+            scrollTrigger: { trigger: ".mf-timeline", start: "top 88%", once: true },
+          },
+        );
+      }
+
+      if (root.querySelector(".mf-boundary-line")) {
+        gsap.fromTo(
+          ".mf-boundary-line",
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: "power2.out",
+            duration: 1.1,
+            scrollTrigger: { trigger: ".mf-boundary-split", start: "top 80%", once: true },
+          },
+        );
+      }
+
+      gsap.utils.toArray<HTMLElement>(".mf-idx-row", root).forEach((row, index) => {
+        gsap.fromTo(
+          row.querySelector(".mf-idx-link"),
+          { yPercent: 60, autoAlpha: 0 },
+          {
+            yPercent: 0,
+            autoAlpha: 1,
+            ease: "power3.out",
+            duration: 0.65,
+            delay: index * 0.055,
+            scrollTrigger: { trigger: row, start: "top 92%", once: true },
+          },
+        );
+      });
+
+      gsap.utils.toArray<HTMLElement>(".mf-words > span > span", root).forEach((line, index) => {
+        gsap.fromTo(
+          line,
+          { yPercent: 112 },
+          {
+            yPercent: 0,
+            ease: "power3.out",
+            duration: 0.7,
+            delay: index * 0.09,
+            scrollTrigger: { trigger: ".mf-words-section", start: "top 82%", once: true },
+          },
+        );
+      });
+
+      media.add("(min-width: 960px)", () => {
+        const labels = gsap.utils.toArray<HTMLElement>(".mf-exploded-key > div", root);
+        gsap.set(labels, { autoAlpha: 0, y: 14 });
+        gsap.set(".mf-machine-status--open", { autoAlpha: 0, y: 14 });
+
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: heroScrollRef.current,
+            start: "top top",
+            end: "+=130%",
+            pin: heroPinRef.current,
+            scrub: 1,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        timeline
+          .to(".mf-hero-copy", { autoAlpha: 0.32, yPercent: -9, scale: 0.97, filter: "blur(2px)", duration: 0.5 }, 0)
+          .to(".mf-hero-bottom", { autoAlpha: 0, y: 20, duration: 0.18 }, 0.05)
+          .to(".mf-machine-status--closed", { autoAlpha: 0, y: -12, duration: 0.18 }, 0.22)
+          .to(".mf-machine-status--open", { autoAlpha: 1, y: 0, duration: 0.24 }, 0.4);
+
+        labels.forEach((label, index) => {
+          timeline.to(label, { autoAlpha: 1, y: 0, duration: 0.13 }, 0.36 + index * 0.055);
+        });
+      });
+
+      media.add("(min-width: 768px) and (max-width: 959px)", () => {
+        gsap.fromTo(
+          ".mf-hero-copy",
+          { y: 0 },
+          {
+            y: -42,
+            ease: "none",
+            scrollTrigger: { trigger: heroScrollRef.current, start: "top top", end: "bottom top", scrub: 1 },
+          },
+        );
+      });
+
+      return () => media.revert();
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [reducedMotion, saveData]);
+
+  const closeMenu = () => setMenuOpen(false);
+  const updateCtaGlow = (event: ReactPointerEvent<HTMLElement>) => {
+    const target = event.currentTarget;
+    const bounds = target.getBoundingClientRect();
+    target.style.setProperty("--pointer-x", (event.clientX - bounds.left) / bounds.width * 100 + "%");
+    target.style.setProperty("--pointer-y", (event.clientY - bounds.top) / bounds.height * 100 + "%");
+  };
+
+  return (
+    <div ref={rootRef} className={"mf-site " + (menuOpen ? "mf-menu-open" : "")}>
+      <a className="mf-skip-link" href="#main-content">Skip to content</a>
+      <div className={"mf-loader " + (loaded ? "is-complete" : "")} aria-live="polite" aria-label="Codavolt is loading">
+        <span className="mf-loader-word mf-loader-word--one">INITIALIZING</span>
+        <span className="mf-loader-word mf-loader-word--two">WE BUILD</span>
+        <span className="mf-loader-word mf-loader-word--three">WHAT&apos;S NEXT.</span>
+        <span className="mf-loader-progress" />
+      </div>
+
+      <header className={"mf-header " + (condensed ? "is-condensed" : "") + (navHidden && !menuOpen ? " is-hidden" : "")}>
+        <a className="mf-wordmark" href="#top" data-cursor aria-label="Codavolt home">
+          <span className="mf-bolt-pulse"><CodavoltIcon size={24} /></span>
+          CODAVOLT<span>®</span>
+        </a>
+        <nav className="mf-desktop-nav" aria-label="Primary navigation">
+          {navigation.map((item) => (
+            <a key={item.label} href={item.href} data-cursor>{item.label}</a>
+          ))}
+        </nav>
+        <a className="mf-header-cta" href="#start" data-cursor>
+          Build with us <ArrowUpRight size={16} weight="bold" aria-hidden="true" />
+        </a>
+        <button
+          ref={menuButtonRef}
+          className="mf-menu-button"
+          type="button"
+          aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setMenuOpen((open) => !open)}
+          data-cursor
+        >
+          {menuOpen ? <X size={25} weight="regular" /> : <List size={25} weight="regular" />}
+        </button>
+      </header>
+
+      <div
+        ref={menuRef}
+        id="mobile-navigation"
+        className="mf-mobile-menu"
+        aria-hidden={!menuOpen}
+        inert={!menuOpen || undefined}
+      >
+        <div>
+          <p>CODAVOLT / MENU</p>
+          {navigation.map((item) => (
+            <a key={item.label} href={item.href} onClick={closeMenu}>
+              {item.label}<ArrowUpRight size={22} aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+        <a href={"mailto:" + EMAIL} onClick={closeMenu}>{EMAIL}</a>
+      </div>
+
+      <main id="main-content" tabIndex={-1}>
+        <section id="top" ref={heroScrollRef} className="mf-hero-scroll" aria-labelledby="hero-title">
+          <div ref={heroPinRef} className="mf-hero-pin">
+            <div className="mf-aurora" aria-hidden="true"><i /><i /><i /></div>
+            <div className="mf-hero-noise" aria-hidden="true" />
+            <div className="mf-hero-copy">
+              <p className="mf-hero-intro">Codavolt builds the operational layer behind ambitious businesses.</p>
+              <h1 id="hero-title">
+                <span>WE BUILD</span>
+                <span>SYSTEMS THAT</span>
+                <span><em className="mf-move">MOVE</em> BUSINESS.</span>
+              </h1>
+              <a className="mf-hero-link" href="#start" data-cursor>
+                Start a real build <ArrowUpRight size={20} aria-hidden="true" />
+              </a>
+            </div>
+
+            <div className="mf-machine-status mf-machine-status--closed">
+              <span>AUTOMATION, SOFTWARE, DATA</span>
+              <span>SCROLL <ArrowDown size={15} aria-hidden="true" /></span>
+            </div>
+            <div className="mf-machine-status mf-machine-status--open">
+              <span>SEVEN WAYS WE BUILD</span>
+              <span>KEEP GOING.</span>
+            </div>
+
+            <div className="mf-exploded-key" aria-hidden="true">
+              {services.map((service) => (
+                <div key={service.title}><i aria-hidden="true" /><span>{service.title}</span></div>
+              ))}
+            </div>
+
+            <div className="mf-hero-bottom">
+              <span>Automation</span><span>Custom software</span><span>Clean data</span><span>AI tools</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 1. THE 4 PILLARS (Core Services) */}
+        <FourPillars />
+
+        {/* 2. THE ENGINEERING LAB (Interactive 3D Conduit & Laser Autonomy) */}
+        <section id="lab" className="mf-lab-anchor" aria-hidden="true" />
+
+        <section id="workflow" className="mf-flow-section mf-section-shell" data-chapter="03 / Engineering lab" aria-labelledby="workflow-title">
+          <div className="mf-scene-copy">
+            <span className="mf-pill-eyebrow"><span className="mf-pill-dot" /> THE ENGINEERING LAB</span>
+            <h2 id="workflow-title" className="js-reveal">One request, from arrival to done.</h2>
+            <p className="js-reveal">This is a system running. Work arrives, keeps its context, follows the rules you set, and stops for a person only when judgment is genuinely needed.</p>
+            <a className="mf-inline-button js-reveal" href="#start" data-cursor>Map your version <ArrowUpRight size={18} aria-hidden="true" /></a>
+          </div>
+          <WorkflowCanvas reducedMotion={reducedMotion} />
+        </section>
+
+        <section id="systems" className="mf-intro-section mf-section-shell" data-chapter="04 / Systems">
+          <div className="mf-intro-rail" aria-hidden="true"><span /></div>
+          <p className="mf-section-note js-reveal">The business does not need more tabs. It needs a system with a point of view.</p>
+          <div className="mf-intro-grid">
+            <h2 className="js-reveal">Everything you use works better when it works together.</h2>
+            <div className="mf-intro-copy js-reveal">
+              <p>We take the work spread across conversations, software, spreadsheets, and memory, then turn it into tools your people can actually rely on.</p>
+              <a href="#start" className="mf-text-link" data-cursor>Bring us the messy version <ArrowRight size={18} aria-hidden="true" /></a>
+            </div>
+          </div>
+          <div className="mf-channel-band">
+            <div className="mf-channel-copy js-reveal">
+              <p>What we actually ship</p>
+              <h3>Assistants and tools on the channels people already use.</h3>
+              <p>A WhatsApp assistant that checks stock and takes the order. An inbox that reads its own invoices. A Slack alert that arrives with the context attached. One system underneath all of it.</p>
+            </div>
+            <div className="js-reveal">
+              <ChannelDemo reducedMotion={reducedMotion} />
+            </div>
+          </div>
+
+          <ol className="mf-index" aria-label="Codavolt services">
+            {services.map((service, index) => (
+              <li key={service.title} className="mf-idx-row">
+                <a className="mf-idx-link" href="#start" data-cursor>
+                  <span className="mf-idx-num">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="mf-idx-name">
+                    <span>{service.title}</span>
+                    <span aria-hidden="true">{service.title}</span>
+                  </span>
+                  <span className="mf-idx-detail">{service.detail}</span>
+                  <ArrowUpRight size={22} weight="light" aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section id="automation" className="mf-automation-scene mf-section-shell" data-chapter="05 / Automation" aria-labelledby="automation-title">
+          <div className="mf-scene-copy">
+            <h2 id="automation-title" className="js-reveal">Automation that keeps the business moving.</h2>
+            <p className="js-reveal">A request enters. Context stays with it. The next useful action happens without someone rebuilding the same answer by hand.</p>
+            <a className="mf-inline-button js-reveal" href="#start" data-cursor>Map a workflow <ArrowUpRight size={18} aria-hidden="true" /></a>
+          </div>
+          <div className="js-reveal">
+            <AutomationRuns reducedMotion={reducedMotion} />
+          </div>
+        </section>
+
+        <section className="mf-software-scene mf-section-shell" data-chapter="06 / Software" aria-labelledby="software-title">
+          <div className="js-reveal">
+            <OpsDesk reducedMotion={reducedMotion} />
+          </div>
+          <div className="mf-scene-copy mf-scene-copy--software">
+            <h2 id="software-title" className="js-reveal">Software that fits how your business works, not the other way around.</h2>
+            <p className="js-reveal">The best internal tool feels obvious because it is built around your actual decisions, handoffs, and standards.</p>
+            <div className="mf-software-facts js-reveal">
+              <span>Internal tools</span><span>Client portals</span><span>Operational dashboards</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="data" className="mf-data-scene mf-section-shell" data-chapter="07 / Data" aria-labelledby="data-title">
+          <div className="mf-scene-copy mf-scene-copy--data">
+            <h2 id="data-title" className="js-reveal">Data, cleaned, connected, and ready to work.</h2>
+            <p className="js-reveal">We turn the scattered record into something the business can trust, share, automate, and use to make the next decision.</p>
+          </div>
+          <div className="js-reveal">
+            <RecordMerge reducedMotion={reducedMotion} />
+          </div>
+        </section>
+
+        <section className="mf-words-section" aria-label="Codavolt operational principles">
+          <div className="mf-words-inner">
+            <p className="mf-words-eyebrow js-reveal"><i aria-hidden="true" />The point</p>
+            <p className="mf-words">
+              <span><span>Less dragging.</span></span>
+              <span><span>More moving.</span></span>
+            </p>
+            <p className="mf-words-sub js-reveal">Every hour spent moving work between tools is an hour the business is not moving. That is the whole argument.</p>
+          </div>
+        </section>
+
+        <section id="boundary" className="mf-boundary mf-section-shell" data-chapter="08 / The line" aria-labelledby="boundary-title">
+          <p className="mf-section-note js-reveal">You draw the line.</p>
+          <h2 id="boundary-title" className="js-reveal">Not every task should run itself.</h2>
+          <div className="js-reveal">
+            <LaserThreshold reducedMotion={reducedMotion} />
+          </div>
+          <p className="mf-boundary-note js-reveal">
+            <b>You set the line, and you can move it.</b> Everything on the left runs on its own. Everything on the right still gets done — gathered, checked, and prepared — then handed to you with the context already attached.
+          </p>
+        </section>
+
+        <section id="process" className="mf-process-section mf-section-shell" data-chapter="09 / Process" aria-labelledby="process-title">
+          <div className="mf-process-head">
+            <h2 id="process-title" className="js-reveal">We go from messy to working. Fast, and properly.</h2>
+            <p className="js-reveal">The work stays close to the people who do it. That is how the system gets adopted, not just presented.</p>
+          </div>
+          <div className="js-reveal">
+            <BuildTimeline />
+          </div>
+        </section>
+
+        <section className="mf-statement-section" aria-label="Codavolt statement">
+          <p>When the system gets clear,</p>
+          <h2><span>EVERYTHING</span><span>MOVES.</span></h2>
+          <div className="mf-statement-lights" aria-hidden="true"><i /><i /><i /><i /></div>
+        </section>
+
+        <section id="start" className="mf-cta-section" onPointerMove={updateCtaGlow} aria-labelledby="cta-title">
+          <div className="mf-aurora mf-aurora--cta" aria-hidden="true"><i /><i /><i /></div>
+          <div className="mf-cta-grid" aria-hidden="true" />
+          <p>Bring the friction. We will find the system.</p>
+          <h2 id="cta-title">Tell us what should run itself.</h2>
+          <ContactForm email={EMAIL} />
+          <span className="mf-cta-email">or write to <a href={"mailto:" + EMAIL}>{EMAIL}</a></span>
+        </section>
+      </main>
+
+      <footer className="mf-footer mf-footer--full">
+        <div className="mf-footer-top">
+          <div className="mf-footer-brand">
+            <a className="mf-wordmark" href="#top" data-cursor aria-label="Codavolt home">
+              <CodavoltIcon size={24} />
+              CODAVOLT<span>®</span>
+            </a>
+            <p>Automation, custom software, clean data, AI tools, and integrations for businesses ready to move.</p>
+            <a className="mf-footer-cta" href="#start" data-cursor>Start a build <ArrowUpRight size={16} aria-hidden="true" /></a>
+          </div>
+          <nav className="mf-footer-col" aria-label="Capabilities">
+            <h3>Capabilities</h3>
+            {services.map((s) => <a key={s.title} href="#services">{s.title}</a>)}
+          </nav>
+          <nav className="mf-footer-col" aria-label="Studio">
+            <h3>Studio</h3>
+            {navigation.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
+          </nav>
+          <div className="mf-footer-col">
+            <h3>Contact</h3>
+            <a href={"mailto:" + EMAIL}>{EMAIL}</a>
+            <span>Reply within one working day</span>
+            <span>Working with teams remotely</span>
+          </div>
+        </div>
+        <div className="mf-footer-ghost" aria-hidden="true">CODAVOLT</div>
+        <div className="mf-footer-legal">
+          <span>© {new Date().getFullYear()} Codavolt. All rights reserved.</span>
+          <a href="#top">Back to top ↑</a>
+        </div>
+      </footer>
+
+      {desktop && finePointer && !reducedMotion && <div ref={cursorRef} className="mf-cursor" data-visible="false" aria-hidden="true" />}
+    </div>
+  );
+}
+
+export default MainframePage;
